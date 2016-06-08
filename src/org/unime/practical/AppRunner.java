@@ -10,7 +10,7 @@ import org.jppf.node.protocol.Task;
 public class AppRunner {
 
 	private final int NUMEROMINIMO = 1;
-	private final int NUMEROMAXIMO = 400;
+	private final int NUMEROMAXIMO = 40000;
 	
   public static void main(final String...args) {
 
