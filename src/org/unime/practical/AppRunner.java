@@ -15,16 +15,16 @@ public class AppRunner {
   public static void main(final String...args) {
 
     // Cria o JPPF Client
-    // e conecta-se com um ou v�rios drivers JPPF
+    // e conecta-se com um ou vários drivers JPPF
     try (JPPFClient jppfClient = new JPPFClient()) {
 
       // Cria uma instancia do app.
       AppRunner runner = new AppRunner();
 
-      // Cria e executa um job que bloqueia a aplica��o no n� que o processa
+      // Cria e executa um job que bloqueia a app no nó que o processa
 //      runner.executeBlockingJob(jppfClient);
 
-      // Cria e executa um job que n�o bloqueia a aplica��o no n� que o processa
+      // Cria e executa um job que não bloqueia a app no nó que o processa
 //      runner.executeNonBlockingJob(jppfClient);
 
       // Cria e executa 3 jobs em paralelo
@@ -44,19 +44,18 @@ public class AppRunner {
   public JPPFJob createJob(final String jobName, int begin, int end) throws Exception {
     // Cria o JPPF job
     JPPFJob job = new JPPFJob();
+    
     // Da ao trabalho um nome, para que possamos controla-lo
     job.setName(jobName);
 
     // Adiciona uma tarefa ao job.
     Task<?> task = job.add(new PracticalNumberCalculationTask(begin, end));
+    
     // Atribui um nome a tarefa
     task.setId(jobName + " - Exemplo de Tarefa");
 
-    // Outras tarefas podem ser adicionadas ...
-    //
-
-    // As tarefas s�o executadas de forma assincrona
-    // mas os resultados s�o devolvidos na mesma ordem
+    // As tarefas são executadas de forma assincrona
+    // mas os resultados são devolvidos na mesma ordem
     return job;
   }
 
@@ -65,49 +64,49 @@ public class AppRunner {
    * @param jppfClient the {@link JPPFClient} instance which submits the job for execution.
    * @throws Exception if an error occurs while executing the job.
    */
-  public void executeBlockingJob(final JPPFClient jppfClient) throws Exception {
-    // Cria o job
-    JPPFJob job = createJob("modelo de blocking job");
-
-    // Define o Job como Blocking (Bloquia a aplica��o durante sua execu��o)
-    job.setBlocking(true);
-
-    // Envia os Jobs e aguarda os rsultados
-    // Os resutados s�o retornados em uma lista de instancias da classe Task<?> ,
-    // na mesma ordem que os trabalhos foram adicionados 
-    List<Task<?>> results = jppfClient.submitJob(job);
-
-    // Processa os resultados
-    processExecutionResults(job.getName(), results);
-  }
+//  public void executeBlockingJob(final JPPFClient jppfClient) throws Exception {
+//    // Cria o job
+//    JPPFJob job = createJob("modelo de blocking job");
+//
+//    // Define o Job como Blocking (Bloquia a aplica��o durante sua execu��o)
+//    job.setBlocking(true);
+//
+//    // Envia os Jobs e aguarda os rsultados
+//    // Os resutados s�o retornados em uma lista de instancias da classe Task<?> ,
+//    // na mesma ordem que os trabalhos foram adicionados 
+//    List<Task<?>> results = jppfClient.submitJob(job);
+//
+//    // Processa os resultados
+//    processExecutionResults(job.getName(), results);
+//  }
 
   /**
    * Executa o job sem bloquear a app. A aplica��o tem a responsabilidade tratar os dados quando acabar as tarefas. Execu��o assincrona
    * @param jppfClient the {@link JPPFClient} instance which submits the job for execution.
    * @throws Exception if an error occurs while executing the job.
    */
-  public void executeNonBlockingJob(final JPPFClient jppfClient) throws Exception {
-    // Cria um trabalho
-    JPPFJob job = createJob("Modelo de non-blocking job1");
-
-    // define a tarefa como non-blocking (Assincrono) 
-    job.setBlocking(false);
-
-    // Envia o Job. essa execu��o � assincrona, n�o aguarda a conclus�o dos jobs para continuar
-    // por esse motivo o retorno � sempre nulo
-    // note que � o mesmo m�todo utilizado em jobs com bloqueio
-    jppfClient.submitJob(job);
-
-    // A execu��o continua...
-    System.out.println("O(s) job(s) foram submetidos para execu��o...");
-    // ...
-
-    // Este m�todo aguarda o retorno de todos os jobs 
-    List<Task<?>> results = job.awaitResults();
-
-    // processa os resultados
-    processExecutionResults(job.getName(), results);
-  }
+//  public void executeNonBlockingJob(final JPPFClient jppfClient) throws Exception {
+//    // Cria um trabalho
+//    JPPFJob job = createJob("Modelo de non-blocking job1");
+//
+//    // define a tarefa como non-blocking (Assincrono) 
+//    job.setBlocking(false);
+//
+//    // Envia o Job. essa execu��o � assincrona, n�o aguarda a conclus�o dos jobs para continuar
+//    // por esse motivo o retorno � sempre nulo
+//    // note que � o mesmo m�todo utilizado em jobs com bloqueio
+//    jppfClient.submitJob(job);
+//
+//    // A execu��o continua...
+//    System.out.println("O(s) job(s) foram submetidos para execu��o...");
+//    // ...
+//
+//    // Este m�todo aguarda o retorno de todos os jobs 
+//    List<Task<?>> results = job.awaitResults();
+//
+//    // processa os resultados
+//    processExecutionResults(job.getName(), results);
+//  }
 
   /**
    * Executa v�rios jobs simuntaneos no JPPFClient.
@@ -131,27 +130,8 @@ public class AppRunner {
   //Lista para armazenar os jobs; Utilizada para colher os resultados posteriormente
     final List<JPPFJob> jobList = new ArrayList<>(numberOfJobs);
 
-    int div = NUMEROMAXIMO / numberOfJobs;
-    
-//    for(int i = 1; i <= div; i++) {
-//        JPPFJob job = createJob("Template concurrent job " + i);
-//
-//        // define o job como non-blocking. (assincrono)
-//        job.setBlocking(false);
-//
-//        // envia o job para execu��o sem parar o processamento (assincrono)
-//        jppfClient.submitJob(job);
-//
-//        // add o job a lista para utiliza��o posterior
-//        jobList.add(job);
-//    }
-    
-    int begin, end;
-    
     // Cria e submete os trabalhos
     for (int i = 1; i <= NUMEROMAXIMO; i += (NUMEROMAXIMO/numberOfJobs)) {
-    	
-      System.out.println(i); 	
     	
       // Cria os trabalhos com nomes diferentes
       JPPFJob job = createJob("Template concurrent job " + i, i, i+80);
@@ -159,20 +139,19 @@ public class AppRunner {
       // define o job como non-blocking. (assincrono)
       job.setBlocking(false);
 
-      // envia o job para execu��o sem parar o processamento (assincrono)
+      // envia o job para execução sem parar o processamento (assincrono)
       jppfClient.submitJob(job);
 
-      // add o job a lista para utiliza��o posterior
+      // add o job a lista para uso posterior
       jobList.add(job);
     }
 
     // Equando os Jobs est�o executando podemos fazer outras coisas
     System.out.println("Equando os Jobs estão executando podemos fazer outras coisas");
-    // ...
 
-    // aguarda a execu��o de todos os jobs e tarefas do job e processa o resultado
+    // aguarda a execução de todos os jobs e tarefas do job e processa o resultado
     for (JPPFJob job: jobList) {
-      // aguarda a execu��o de todos os jobs e tarefas do job
+      // aguarda a execução de todos os jobs e tarefas do job
       List<Task<?>> results = job.awaitResults();
 
       // Processa o resultado
@@ -192,11 +171,11 @@ public class AppRunner {
 
     // Se o a quantidade definida no pool for diferente do definido pela app
     if (pool.getConnections().size() != numberOfConnections) {
-      // define a quantidade de conex�es
+      // define a quantidade de conexões
       pool.setSize(numberOfConnections);
     }
 
-    // Espera at� que todas as conex�es estejam dispon�veis no pool
+    // Espera até que todas as conexões estejam disponíveis no pool
     pool.awaitActiveConnections(Operator.AT_LEAST, numberOfConnections);
   }
 
