@@ -10,7 +10,7 @@ import org.jppf.node.protocol.Task;
 public class AppRunner {
 
 	private final int NUMEROMINIMO = 1;
-	private final int NUMEROMAXIMO = 40000;
+	private final int NUMEROMAXIMO = 4000;
 
 	public static void main(final String... args) {
 
@@ -22,8 +22,8 @@ public class AppRunner {
 
 			// runner.executeNonBlockingJob(jppfClient);
 
-//			runner.executeMultipleConcurrentJobsNumberByNumber(jppfClient, 5);
-			runner.executeMultipleConcurrentJobsNumberRange(jppfClient, 5);
+			runner.executeMultipleConcurrentJobsNumberByNumber(jppfClient, 5);
+			// runner.executeMultipleConcurrentJobsNumberRange(jppfClient, 5);
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -39,7 +39,7 @@ public class AppRunner {
 	 * @throws Exception
 	 *             if an error occurs while creating the job or adding tasks.
 	 */
-	public JPPFJob createJob(final String jobName, int begin) throws Exception {
+	public JPPFJob createJob(final String jobName, Integer begin) throws Exception {
 		JPPFJob job = new JPPFJob();
 		job.setName(jobName);
 
@@ -48,7 +48,7 @@ public class AppRunner {
 
 		return job;
 	}
-	
+
 	/**
 	 * 
 	 * @param jobName
@@ -157,14 +157,52 @@ public class AppRunner {
 	 * @throws Exception
 	 *             if any error occurs.
 	 */
-	public void executeMultipleConcurrentJobsNumberByNumber(
-			final JPPFClient jppfClient, final int numberOfJobs) throws Exception {
-		
+	public void executeMultipleConcurrentJobsNumberByNumber(final JPPFClient jppfClient, final int numberOfJobs)
+			throws Exception {
+
 		ensureNumberOfConnections(jppfClient, numberOfJobs);
 
 		List<JPPFJob> jobList = new ArrayList<>(numberOfJobs);
-		int contador 	= 0;
-		int contador2 	= 0;
+		int contador = 0;
+		int contador2 = 0;
+
+		for (int i = NUMEROMINIMO; i <= NUMEROMAXIMO; i++) {
+
+			contador++;
+			contador2++;
+			List<Integer> tarefas = new ArrayList<Integer>();
+
+			// JPPFJob job = createJob("Job Non-Blocking: " + i, i -
+			// (NUMEROMAXIMO / numberOfJobs), i);
+
+			JPPFJob job = createJob("Non-Blocking: " + i, i);
+
+			job.setBlocking(false);
+			jppfClient.submitJob(job);
+			jobList.add(job);
+		}
+
+		for (JPPFJob job : jobList) {
+			List<Task<?>> results = job.awaitResults();
+			processExecutionResults(job.getName(), results);
+			jobList = new ArrayList<>(numberOfJobs);
+		}
+	}
+
+	/**
+	 * 
+	 * @param jppfClient
+	 * @param numberOfJobs
+	 * @throws Exception
+	 */
+	public void executeMultipleConcurrentJobsNumberRange(final JPPFClient jppfClient, final int numberOfJobs)
+			throws Exception {
+
+		ensureNumberOfConnections(jppfClient, numberOfJobs);
+
+		List<JPPFJob> jobList = new ArrayList<>(numberOfJobs);
+		int contador = 0;
+		int contador2 = 0;
 
 		for (int i = NUMEROMINIMO; i <= NUMEROMAXIMO; i++) {
 
@@ -172,67 +210,23 @@ public class AppRunner {
 			contador2++;
 			List<PracticalNumberCalculationTask> tarefas = new ArrayList<PracticalNumberCalculationTask>();
 
-			if (contador == 100) {
-				contador = 0;
-//				JPPFJob job = createJob("Job Non-Blocking: " + i, i - (NUMEROMAXIMO / numberOfJobs), i);
-
-				JPPFJob job = createJob("Job Non-Blocking: " + i, i);
-				
-				job.setBlocking(false);
-				jppfClient.submitJob(job);
-				jobList.add(job);
-			}
-			
-			if (contador2 == 1000) {
-				contador2 = 0;
-				
-				for (JPPFJob job : jobList) {
-					List<Task<?>> results = job.awaitResults();
-					processExecutionResults(job.getName(), results);
-					jobList = new ArrayList<>(numberOfJobs);
-				}
-			}
-		}
-	}
-	
-	/**
-	 * 
-	 * @param jppfClient
-	 * @param numberOfJobs
-	 * @throws Exception
-	 */
-	public void executeMultipleConcurrentJobsNumberRange(
-			final JPPFClient jppfClient, final int numberOfJobs) throws Exception {
-		
-		ensureNumberOfConnections(jppfClient, numberOfJobs);
-
-		List<JPPFJob> jobList = new ArrayList<>(numberOfJobs);
-		int contador 	= 0;
-		int contador2 	= 0;
-
-		for (int i = NUMEROMINIMO; i <= NUMEROMAXIMO; i ++) {
-
-			contador++;
-			contador2++;
-			List<PracticalNumberCalculationTask> tarefas = new ArrayList<PracticalNumberCalculationTask>();
-
 			if (contador == (NUMEROMAXIMO / numberOfJobs) / 2) {
 				contador = 0;
-				
-				JPPFJob job = createJob("Job Non-Blocking: " + i, i - (NUMEROMAXIMO / numberOfJobs) / 2, i);
+
+				JPPFJob job = createJob("Non-Blocking: " + i, i - (NUMEROMAXIMO / numberOfJobs) / 2, i);
 				jppfClient.submitJob(job);
 				jobList.add(job);
 			}
-			
-//			if (contador2 == 1000) {
-//				contador2 = 0;
-				
-				for (JPPFJob job : jobList) {
-					List<Task<?>> results = job.awaitResults();
-					processExecutionResults(job.getName(), results);
-					jobList = new ArrayList<>(numberOfJobs);
-				}
-//			}
+
+			// if (contador2 == 1000) {
+			// contador2 = 0;
+
+			for (JPPFJob job : jobList) {
+				List<Task<?>> results = job.awaitResults();
+				processExecutionResults(job.getName(), results);
+				jobList = new ArrayList<>(numberOfJobs);
+			}
+			// }
 		}
 	}
 
@@ -265,13 +259,19 @@ public class AppRunner {
 	 *            the tasks results after execution on the grid.
 	 */
 	public synchronized void processExecutionResults(final String jobName, final List<Task<?>> results) {
-		System.out.printf("Resultados para o Job: '%s' :\n", jobName);
+		// System.out.printf("Resultados para o Job: '%s' :\n", jobName);
 		for (Task<?> task : results) {
 			String taskName = task.getId();
 			if (task.getThrowable() != null) {
 				System.out.println(taskName + ", an exception was raised: " + task.getThrowable().getMessage());
 			} else {
-				System.out.println(taskName + ", resultado da computação: " + task.getResult());
+
+				if (task.getResult() != null) {
+					System.out.println(taskName + ", resultado da computação: " + task.getResult() + " é prático!");
+				} else {
+					System.out.println(taskName + ", resultado da computação: Não é prático!");
+				}
+
 			}
 		}
 	}

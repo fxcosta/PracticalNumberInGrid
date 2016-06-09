@@ -37,18 +37,22 @@ public class PracticalNumberCalculationTask extends AbstractTask<String> {
 	public void run() {
 
 		try {
-			String conjuntoPrint = "";
+			String conjuntoPrint = null;
 
 			if (this.end == null) {
 				boolean practical = this.isAPracticalNumber(this.begin);
 
 				if (practical) {
-					conjuntoPrint += String.valueOf(this.begin) + ", ";
+					conjuntoPrint = String.valueOf(this.begin);
 					System.out.println(this.begin + " é um número prático");
 				}
+
 			} else {
-				
+
 				int conjunto[] = this.getPracticalNumbers(this.begin, this.end);
+
+				conjuntoPrint = "";
+
 				for (int i : conjunto) {
 					conjuntoPrint += String.valueOf(i) + ", ";
 					if (i > 0) {
@@ -58,6 +62,13 @@ public class PracticalNumberCalculationTask extends AbstractTask<String> {
 					}
 				}
 			}
+
+			// try {
+			// Thread.sleep(3000L);
+			// } catch (InterruptedException e) {
+			// setThrowable(e);
+			// return;
+			// }
 
 			setResult(conjuntoPrint);
 
